@@ -8,6 +8,7 @@ import (
 
 type AppContext struct {
 	Db					*sqlx.DB
+	Tx					*sqlx.Tx
 	CookieMachine		*securecookie.SecureCookie
 	HandlerResp			int
 }

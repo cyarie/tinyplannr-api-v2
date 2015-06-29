@@ -27,13 +27,15 @@ var (
 
 func Setup() *settings.AppContext {
 	connect_str := fmt.Sprintf("user=tinyplannr dbname=tinyplannr_test password=%s sslmode=disable", os.Getenv("TP_PW"))
-	mainDb, _ := sqlx.Connect("postgres", connect_str)
+	db, _ := sqlx.Connect("postgres", connect_str)
+	tx := db.MustBegin()
 
 	cookie_key, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_HASH"))
 	cookie_block, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_BLOCK"))
 
 	context := &settings.AppContext{
-		Db:				mainDb,
+		Db:				db,
+		Tx:				tx,
 		CookieMachine:	securecookie.New(cookie_key, cookie_block),
 	}
 
@@ -99,12 +101,11 @@ func TestGetUser(t *testing.T) {
 		UpdateDt: time.Now(),
 	}
 
-	tx := context.Db.MustBegin()
 	// We have to run this to reset the SERIAL sequence back to one to avoid re-building the schema each time we test
-	tx.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
-	tx.MustExec(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
+	context.Tx.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
+	context.Tx.MustExec(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
 	             VALUES ($1, $2, $3, $4, $5);`, testUser.Email, testUser.FirstName, testUser.LastName, testUser.ZipCode, testUser.UpdateDt)
-	tx.Commit()
+	context.Tx.Commit()
 
 	// Retrieve good ol' user number one
 	req_str := fmt.Sprintf("%s/user/1", server.URL)
@@ -139,7 +140,5 @@ func TestGetUser(t *testing.T) {
 	fmt.Println(testResp)
 
 	// Let's clear out this test row
-	tx = context.Db.MustBegin()
-	tx.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
-	defer tx.Commit()
+	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
 }
