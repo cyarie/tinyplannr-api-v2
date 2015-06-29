@@ -9,6 +9,14 @@ import (
 func ApiRouter(ac *settings.AppContext) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
+	UserIndexFunc := handlers.AppHandler{
+		ac,
+		false,
+		"UserIndex",
+		handlers.UserIndexHandler,
+	}
+	router.Methods("GET").Path("/user/{userId}").Name(UserIndexFunc.RouteName).Handler(&UserIndexFunc)
+
 	IndexFunc := handlers.AppHandler{
 		ac,
 		false,

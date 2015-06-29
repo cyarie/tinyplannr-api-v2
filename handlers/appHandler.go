@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"log"
+	"encoding/json"
 
 	"github.com/cyarie/tinyplannr-api-v2/settings"
-	"fmt"
 )
 
 type AppHandler struct {
@@ -15,13 +16,29 @@ type AppHandler struct {
 }
 
 
-func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fn *AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status, err := fn.H(fn.AppContext, w, r)
+	log.Printf(
+		"%s\t%s\t%d\t%s",
+		r.Method,
+		r.RequestURI,
+		fn.AppContext.HandlerResp,
+		fn.RouteName,
+	)
 	if err != nil {
-		fmt.Println("faerts")
-	} else {
-		fmt.Println("faerts")
+		log.Println(err)
+		switch status {
+			case http.StatusNotFound:
+				w.WriteHeader(http.StatusNotFound)
+			    json.NewEncoder(w).Encode(settings.JsonErr{status, "Object not found. Please try again."})
+			case http.StatusInternalServerError:
+				log.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			    json.NewEncoder(w).Encode(settings.JsonErr{status, "Encountered an internal server error. Please try again."})
+			case http.StatusUnauthorized:
+				log.Println(err)
+				w.WriteHeader(http.StatusUnauthorized)
+			    json.NewEncoder(w).Encode(settings.JsonErr{status, "Login failed. Please provide your email address and password and try again."})
+		}
 	}
-
-	fmt.Println(status)
 }
