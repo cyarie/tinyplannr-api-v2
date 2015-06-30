@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/cyarie/tinyplannr-api-v2/settings"
 	"github.com/cyarie/tinyplannr-api-v2/models"
+	// "io/ioutil"
+	// "io"
 )
 
 func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -49,4 +51,23 @@ func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Re
 	return 200, err
 
 
+}
+
+func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	var err error
+	// var user models.ApiUser
+
+	// body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+
+	if err != nil {
+		log.Println(err)
+		ac.HandlerResp = http.StatusInternalServerError
+		return http.StatusInternalServerError, err
+	}
+
+
+
+
+	ac.HandlerResp = http.StatusCreated
+	return 201, nil
 }

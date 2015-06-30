@@ -19,6 +19,7 @@ import (
 	"github.com/cyarie/tinyplannr-api-v2/settings"
 	"github.com/cyarie/tinyplannr-api-v2/models"
 	"encoding/json"
+	"bytes"
 )
 
 var (
@@ -141,4 +142,38 @@ func TestGetUser(t *testing.T) {
 
 	// Let's clear out this test row
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+}
+
+func TestCreateUser(t *testing.T) {
+	log.Println("Starting TestCreateUser...")
+	context := Setup()
+	defer context.Db.Close()
+	defer Teardown()
+
+	// Let's setup our post data
+	testUser := models.ApiUser{
+		Email: "test@test.com",
+		FirstName: "Chris",
+		LastName: "Yarie",
+		ZipCode: 22201,
+		UpdateDt: time.Now(),
+	}
+
+	body, err := json.Marshal(testUser)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Let's make the URL for the POST request, and the request itself
+	req_str := fmt.Sprintf("%s/user/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
+	}
 }

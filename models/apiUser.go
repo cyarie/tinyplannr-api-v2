@@ -30,4 +30,8 @@ func GetUserData(db *sqlx.DB, userId int64) (*ApiUser, error) {
 	return &user, err
 }
 
+func CreateUser(db *sqlx.DB, au ApiUser) (*ApiUser, error) {
+
+}
+
 

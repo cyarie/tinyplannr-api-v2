@@ -9,14 +9,6 @@ import (
 func ApiRouter(ac *settings.AppContext) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
-	UserIndexFunc := handlers.AppHandler{
-		ac,
-		false,
-		"UserIndex",
-		handlers.UserIndexHandler,
-	}
-	router.Methods("GET").Path("/user/{userId}").Name(UserIndexFunc.RouteName).Handler(&UserIndexFunc)
-
 	IndexFunc := handlers.AppHandler{
 		ac,
 		false,
@@ -24,6 +16,22 @@ func ApiRouter(ac *settings.AppContext) *mux.Router {
 		handlers.IndexHandler,
 	}
 	router.Methods("GET").Path("/").Name(IndexFunc.RouteName).Handler(&IndexFunc)
+
+	UserCreateFunc := handlers.AppHandler{
+		ac,
+		false,
+		"CreateUser",
+		handlers.UserCreateHandler,
+	}
+	router.Methods("POST").Path("/user/create").Name(UserCreateFunc.RouteName).Handler(&UserCreateFunc)
+
+	UserIndexFunc := handlers.AppHandler{
+		ac,
+		false,
+		"UserIndex",
+		handlers.UserIndexHandler,
+	}
+	router.Methods("GET").Path("/user/{userId}").Name(UserIndexFunc.RouteName).Handler(&UserIndexFunc)
 
 	return router
 }
