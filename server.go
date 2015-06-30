@@ -17,13 +17,15 @@ import (
 
 func main() {
 	connect_str := fmt.Sprintf("user=tinyplannr dbname=tinyplannr password=%s sslmode=disable", os.Getenv("TP_PW"))
-	mainDb, _ := sqlx.Connect("postgres", connect_str)
+	db, _ := sqlx.Connect("postgres", connect_str)
+	tx := db.MustBegin()
 
 	cookie_key, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_HASH"))
 	cookie_block, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_BLOCK"))
 
 	context := &settings.AppContext{
-		Db:				mainDb,
+		Db:				db,
+		Tx:				tx,
 		CookieMachine:	securecookie.New(cookie_key, cookie_block),
 	}
 
