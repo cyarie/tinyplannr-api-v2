@@ -13,7 +13,7 @@ type AppContext struct {
 	HandlerResp			int
 }
 
-type JsonErr struct {
+type JsonResp struct {
 	Code		int		`json:"code"`
 	Text		string	`json:"error"`
 }
