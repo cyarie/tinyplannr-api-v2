@@ -1,38 +1,34 @@
-package main
+package api
 
 import (
 	// "net/http"
-	"database/sql"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"fmt"
 	"os"
 	"encoding/base64"
 
-	"github.com/cyarie/tinyplannr-api-v2/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 	"github.com/gorilla/securecookie"
-	"github.com/cyarie/tinyplannr-api-v2/router"
-	"log"
-	"net/http"
+	"github.com/cyarie/tinyplannr-api-v2/api/router"
+	"github.com/gorilla/mux"
 )
 
-func main() {
+func Api() *mux.Router {
 	connect_str := fmt.Sprintf("user=tinyplannr dbname=tinyplannr password=%s sslmode=disable", os.Getenv("TP_PW"))
-	mainDb, _ := sql.Open("postgres", connect_str)
+	db, _ := sqlx.Connect("postgres", connect_str)
+	tx := db.MustBegin()
 
 	cookie_key, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_HASH"))
 	cookie_block, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_BLOCK"))
 
 	context := &settings.AppContext{
-		Db:				mainDb,
+		Db:				db,
+		Tx:				tx,
 		CookieMachine:	securecookie.New(cookie_key, cookie_block),
 	}
 
-	context.Db.Ping()
-
-	fmt.Println("CONNECTED TO THE DB")
-
-	defer context.Db.Close()
-
 	router := router.ApiRouter(context)
-	log.Fatal(http.ListenAndServe(":8080", router))
-	log.Println("GORT IS RUNNING")
+
+	return router
 }
