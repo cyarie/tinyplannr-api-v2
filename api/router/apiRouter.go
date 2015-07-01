@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/cyarie/tinyplannr-api-v2/handlers"
-	"github.com/cyarie/tinyplannr-api-v2/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/handlers"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 	"github.com/gorilla/mux"
 )
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"encoding/json"
 
-	"github.com/cyarie/tinyplannr-api-v2/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 )
 
 type AppHandler struct {

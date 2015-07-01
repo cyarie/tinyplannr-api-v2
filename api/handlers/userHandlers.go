@@ -12,8 +12,8 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/gorilla/mux"
-	"github.com/cyarie/tinyplannr-api-v2/settings"
-	"github.com/cyarie/tinyplannr-api-v2/models"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/models"
 	"github.com/lib/pq"
 )
 
@@ -56,7 +56,7 @@ func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Re
 
 func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
 	var err error
-	var user models.ApiUser
+	var user models.ApiUserCreate
 
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 
