@@ -10,6 +10,8 @@ import (
 	"encoding/base64"
 	"log"
 	"time"
+	"encoding/json"
+	"bytes"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -18,7 +20,6 @@ import (
 	"github.com/cyarie/tinyplannr-api-v2/router"
 	"github.com/cyarie/tinyplannr-api-v2/settings"
 	"github.com/cyarie/tinyplannr-api-v2/models"
-	"encoding/json"
 )
 
 var (
@@ -28,14 +29,12 @@ var (
 func Setup() *settings.AppContext {
 	connect_str := fmt.Sprintf("user=tinyplannr dbname=tinyplannr_test password=%s sslmode=disable", os.Getenv("TP_PW"))
 	db, _ := sqlx.Connect("postgres", connect_str)
-	tx := db.MustBegin()
 
 	cookie_key, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_HASH"))
 	cookie_block, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_BLOCK"))
 
 	context := &settings.AppContext{
 		Db:				db,
-		Tx:				tx,
 		CookieMachine:	securecookie.New(cookie_key, cookie_block),
 	}
 
@@ -102,6 +101,7 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// We have to run this to reset the SERIAL sequence back to one to avoid re-building the schema each time we test
+	context.Tx = context.Db.MustBegin()
 	context.Tx.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
 	context.Tx.MustExec(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
 	             VALUES ($1, $2, $3, $4, $5);`, testUser.Email, testUser.FirstName, testUser.LastName, testUser.ZipCode, testUser.UpdateDt)
@@ -140,5 +140,44 @@ func TestGetUser(t *testing.T) {
 	fmt.Println(testResp)
 
 	// Let's clear out this test row
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
+	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+}
+
+func TestCreateUser(t *testing.T) {
+	log.Println("Starting TestCreateUser...")
+	context := Setup()
+	defer context.Db.Close()
+	defer Teardown()
+
+	// Let's setup our post data
+	testUser := models.ApiUserCreate{
+		Email: "test@test.com",
+		Password: "faerts",
+		FirstName: "Chris",
+		LastName: "Yarie",
+		ZipCode: 22201,
+		UpdateDt: time.Now(),
+	}
+
+	body, err := json.Marshal(testUser)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Let's make the URL for the POST request, and the request itself
+	req_str := fmt.Sprintf("%s/user/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
+	}
+
+	// Clean the test row out of the database
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
 }
