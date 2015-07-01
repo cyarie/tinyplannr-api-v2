@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	// "net/http"
@@ -8,14 +8,13 @@ import (
 	"os"
 	"encoding/base64"
 
-	"github.com/cyarie/tinyplannr-api-v2/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 	"github.com/gorilla/securecookie"
-	"github.com/cyarie/tinyplannr-api-v2/router"
-	"log"
-	"net/http"
+	"github.com/cyarie/tinyplannr-api-v2/api/router"
+	"github.com/gorilla/mux"
 )
 
-func main() {
+func Api() *mux.Router {
 	connect_str := fmt.Sprintf("user=tinyplannr dbname=tinyplannr password=%s sslmode=disable", os.Getenv("TP_PW"))
 	db, _ := sqlx.Connect("postgres", connect_str)
 	tx := db.MustBegin()
@@ -30,5 +29,6 @@ func main() {
 	}
 
 	router := router.ApiRouter(context)
-	log.Println(http.ListenAndServe(":8080", router))
+
+	return router
 }

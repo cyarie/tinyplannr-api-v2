@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	_ "github.com/lib/pq"
-	"github.com/cyarie/tinyplannr-api-v2/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 )
 
 func IndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {

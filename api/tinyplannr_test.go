@@ -1,4 +1,4 @@
-package tinytesting
+package api_test
 
 import (
 	"os"
@@ -17,9 +17,9 @@ import (
 	_ "github.com/lib/pq"
 
 	"github.com/gorilla/securecookie"
-	"github.com/cyarie/tinyplannr-api-v2/router"
-	"github.com/cyarie/tinyplannr-api-v2/settings"
-	"github.com/cyarie/tinyplannr-api-v2/models"
+	"github.com/cyarie/tinyplannr-api-v2/api/router"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
+	"github.com/cyarie/tinyplannr-api-v2/api/models"
 )
 
 var (
