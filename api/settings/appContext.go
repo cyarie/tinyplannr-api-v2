@@ -7,13 +7,13 @@ import (
 )
 
 type AppContext struct {
-	Db					*sqlx.DB
-	Tx					*sqlx.Tx
-	CookieMachine		*securecookie.SecureCookie
-	HandlerResp			int
+	Db            *sqlx.DB
+	Tx            *sqlx.Tx
+	CookieMachine *securecookie.SecureCookie
+	HandlerResp   int
 }
 
 type JsonResp struct {
-	Code		int		`json:"code"`
-	Text		string	`json:"error"`
+	Code int    `json:"code"`
+	Text string `json:"error"`
 }
