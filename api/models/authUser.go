@@ -1,20 +1,20 @@
 package models
 
 import (
-	"time"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"time"
 )
 
 type AuthUser struct {
-	AuthID        int64      `db:"auth_id"`
-	UserID        int64      `db:"user_id"`
-	Email         string     `db:"email"`
-	HashPW        string     `db:"hash_pw"`
-	CreateDt      time.Time  `db:"create_dt"`
-	UpdateDt      time.Time  `db:"update_dt"`
-	LastLoginDt   time.Time  `db:"last_login_dt"`
+	AuthID      int64     `db:"auth_id"`
+	UserID      int64     `db:"user_id"`
+	Email       string    `db:"email"`
+	HashPW      string    `db:"hash_pw"`
+	CreateDt    time.Time `db:"create_dt"`
+	UpdateDt    time.Time `db:"update_dt"`
+	LastLoginDt time.Time `db:"last_login_dt"`
 }
 
 func CreateUserAuth(db *sqlx.DB, au ApiUserCreate) error {

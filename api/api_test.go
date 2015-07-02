@@ -1,29 +1,29 @@
 package api_test
 
 import (
-	"os"
-	"fmt"
-	"testing"
-	"net/http"
-	"io/ioutil"
-	"net/http/httptest"
-	"encoding/base64"
-	"log"
-	"time"
-	"encoding/json"
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 
-	"github.com/gorilla/securecookie"
+	"github.com/cyarie/tinyplannr-api-v2/api/models"
 	"github.com/cyarie/tinyplannr-api-v2/api/router"
 	"github.com/cyarie/tinyplannr-api-v2/api/settings"
-	"github.com/cyarie/tinyplannr-api-v2/api/models"
+	"github.com/gorilla/securecookie"
 )
 
 var (
-	server	*httptest.Server
+	server *httptest.Server
 )
 
 func Setup() *settings.AppContext {
@@ -34,8 +34,8 @@ func Setup() *settings.AppContext {
 	cookie_block, _ := base64.StdEncoding.DecodeString(os.Getenv("TINYPLANNR_SC_BLOCK"))
 
 	context := &settings.AppContext{
-		Db:				db,
-		CookieMachine:	securecookie.New(cookie_key, cookie_block),
+		Db:            db,
+		CookieMachine: securecookie.New(cookie_key, cookie_block),
 	}
 
 	server = httptest.NewServer(router.ApiRouter(context))
@@ -82,7 +82,6 @@ func TestIndexHandler(t *testing.T) {
 		t.Errorf("GORT WAS NOT WELCOMED: %s", string(bs))
 	}
 
-
 }
 
 func TestGetUser(t *testing.T) {
@@ -93,11 +92,11 @@ func TestGetUser(t *testing.T) {
 
 	// We also have to initialize the database here
 	testUser := models.ApiUser{
-		Email: "test@test.com",
+		Email:     "test@test.com",
 		FirstName: "Chris",
-		LastName: "Yarie",
-		ZipCode: 22201,
-		UpdateDt: time.Now(),
+		LastName:  "Yarie",
+		ZipCode:   22201,
+		UpdateDt:  time.Now(),
 	}
 
 	// We have to run this to reset the SERIAL sequence back to one to avoid re-building the schema each time we test
@@ -152,12 +151,12 @@ func TestCreateUser(t *testing.T) {
 
 	// Let's setup our post data
 	testUser := models.ApiUserCreate{
-		Email: "test@test.com",
-		Password: "faerts",
+		Email:     "test@test.com",
+		Password:  "faerts",
 		FirstName: "Chris",
-		LastName: "Yarie",
-		ZipCode: 22201,
-		UpdateDt: time.Now(),
+		LastName:  "Yarie",
+		ZipCode:   22201,
+		UpdateDt:  time.Now(),
 	}
 
 	body, err := json.Marshal(testUser)
@@ -193,12 +192,12 @@ func TestDeleteUser(t *testing.T) {
 
 	// POST data setup
 	testUser := models.ApiUserCreate{
-		Email: "test@test.com",
-		Password: "faerts",
+		Email:     "test@test.com",
+		Password:  "faerts",
 		FirstName: "Chris",
-		LastName: "Yarie",
-		ZipCode: 22201,
-		UpdateDt: time.Now(),
+		LastName:  "Yarie",
+		ZipCode:   22201,
+		UpdateDt:  time.Now(),
 	}
 
 	createBody, err := json.Marshal(testUser)
@@ -220,7 +219,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 
 	deleteUser := models.ApiUser{
-		Email:    "test@test.com",
+		Email: "test@test.com",
 	}
 
 	delBody, err := json.Marshal(deleteUser)

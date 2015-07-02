@@ -1,19 +1,19 @@
 package handlers
 
 import (
-	"net/http"
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"strconv"
-    "io/ioutil"
-    "io"
 
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"github.com/gorilla/mux"
-	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 	"github.com/cyarie/tinyplannr-api-v2/api/models"
+	"github.com/cyarie/tinyplannr-api-v2/api/settings"
+	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 )
 
@@ -51,7 +51,6 @@ func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Re
 
 	ac.HandlerResp = http.StatusOK
 	return 200, err
-
 
 }
 
@@ -98,7 +97,7 @@ func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.R
 func UserDeleteHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
 	var err error
 	var UserDel struct {
-		Email    string
+		Email string
 	}
 
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))

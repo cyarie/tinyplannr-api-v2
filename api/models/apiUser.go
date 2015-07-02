@@ -10,26 +10,26 @@ import (
 
 // Data struct for ApiUser
 type ApiUser struct {
-	UserId		int64 		`json:"user_id" db:"user_id"`
-	Email		string		`json:"email" db:"email"`
-	FirstName	string		`json:"first_name" db:"first_name"`
-	LastName	string		`json:"last_name" db:"last_name"`
-	ZipCode		int64		`json:"zip_code" db:"zip_code"`
-	IsActive	bool		`json:"is_active" db:"is_active"`
-	CreateDt	time.Time	`json:"create_dt" db:"create_dt"`
-	UpdateDt	time.Time	`json:"update_dt" db:"update_dt"`
+	UserId    int64     `json:"user_id" db:"user_id"`
+	Email     string    `json:"email" db:"email"`
+	FirstName string    `json:"first_name" db:"first_name"`
+	LastName  string    `json:"last_name" db:"last_name"`
+	ZipCode   int64     `json:"zip_code" db:"zip_code"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	CreateDt  time.Time `json:"create_dt" db:"create_dt"`
+	UpdateDt  time.Time `json:"update_dt" db:"update_dt"`
 }
 
 type ApiUserCreate struct {
-	UserId		int64 		`json:"user_id" db:"user_id"`
-	Email		string		`json:"email" db:"email"`
-	Password    string		`json:"password" db:"password""`
-	FirstName	string		`json:"first_name" db:"first_name"`
-	LastName	string		`json:"last_name" db:"last_name"`
-	ZipCode		int64		`json:"zip_code" db:"zip_code"`
-	IsActive	bool		`json:"is_active" db:"is_active"`
-	CreateDt	time.Time	`json:"create_dt" db:"create_dt"`
-	UpdateDt	time.Time	`json:"update_dt" db:"update_dt"`
+	UserId    int64     `json:"user_id" db:"user_id"`
+	Email     string    `json:"email" db:"email"`
+	Password  string    `json:"password" db:"password""`
+	FirstName string    `json:"first_name" db:"first_name"`
+	LastName  string    `json:"last_name" db:"last_name"`
+	ZipCode   int64     `json:"zip_code" db:"zip_code"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	CreateDt  time.Time `json:"create_dt" db:"create_dt"`
+	UpdateDt  time.Time `json:"update_dt" db:"update_dt"`
 }
 
 func GetUserData(db *sqlx.DB, userId int64) (*ApiUser, error) {
@@ -88,5 +88,3 @@ func DeleteUser(db *sqlx.DB, email string) error {
 
 	return err
 }
-
-
