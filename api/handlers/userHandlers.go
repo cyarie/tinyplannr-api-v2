@@ -17,6 +17,7 @@ import (
 	"github.com/lib/pq"
 )
 
+// Grabs the stored data for a given user
 func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
 	var err error
 	vars := mux.Vars(r)
@@ -54,6 +55,7 @@ func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Re
 
 }
 
+// Creates a user in the database
 func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
 	var err error
 	var user models.ApiUserCreate

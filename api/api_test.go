@@ -178,6 +178,8 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
 	}
 
-	// Clean the test row out of the database
+	// Clean the test rows out of the database. Have to do the auth row first, because the foreign key constraint
+	// will make Postgres complain if we don't.
+	context.Db.MustExec(`DELETE FROM tinyplannr_auth.user WHERE user_id = 1`)
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
 }

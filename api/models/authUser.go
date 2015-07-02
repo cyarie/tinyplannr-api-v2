@@ -2,10 +2,9 @@ package models
 
 import (
 	"time"
-	// "database/sql"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
-	"fmt"
+	"log"
 )
 
 type AuthUser struct {
@@ -24,15 +23,21 @@ func CreateUserAuth(db *sqlx.DB, au ApiUserCreate) error {
 	// Let's use Bcrypt to generate a password hash
 	pw := []byte(au.Password)
 	hashedPassword, err := bcrypt.GenerateFromPassword(pw, 13)
-	fmt.Println(hashedPassword)
+
 	if err != nil {
 		return err
 	}
 
+	// Rolling a transaction here. We don't need to return anything.
 	tx := db.MustBegin()
-	tx.MustExec(`INSERT INTO tinyplannr_auth.user (email, first_name, last_name, zip_code, update_dt)
-	             VALUES ($1, $2, $3, $4, $5);`, au.Email, au.FirstName, au.LastName, au.ZipCode, au.UpdateDt)
+	tx.MustExec(`INSERT INTO tinyplannr_auth.user (user_id, email, hash_pw, update_dt, last_login_dt)
+	             VALUES ($1, $2, $3, $4, $5);`, au.UserId, au.Email, string(hashedPassword), time.Now(), time.Now())
 	err = tx.Commit()
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	return err
 }
