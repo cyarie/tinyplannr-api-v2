@@ -45,11 +45,20 @@ func GetUserData(db *sqlx.DB, userId int64) (*ApiUser, error) {
 func CreateUser(db *sqlx.DB, au ApiUserCreate) error {
 	var err error
 
-	// Create a transaction, and insert the JSON into the DB
-	tx := db.MustBegin()
-	tx.MustExec(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
-	             VALUES ($1, $2, $3, $4, $5);`, au.Email, au.FirstName, au.LastName, au.ZipCode, au.UpdateDt)
-	err = tx.Commit()
+	// Nevermind -- we have to use QueryRow to grab the user_id out of the statement, so we can make sure to
+	// properly build the corresponding row in the auth schema
+	query_str, err := db.Preparex(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
+	                               VALUES ($1, $2, $3, $4, $5)
+	                               RETURNING user_id;`)
+
+	err = query_str.QueryRowx(au.Email, au.FirstName, au.LastName, au.ZipCode, au.UpdateDt).Scan(&au.UserId)
+
+	if err != nil {
+		return err
+	}
+
+	// Creates the corresponding row/entry in the auth table.
+	err = CreateUserAuth(db, au)
 
 	if err != nil {
 		return err
