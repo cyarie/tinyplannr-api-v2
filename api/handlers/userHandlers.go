@@ -55,7 +55,7 @@ func UserIndexHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Re
 
 }
 
-// Creates a user in the database
+// Creates a user in the database, both in the API schema and the Auth schema
 func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
 	var err error
 	var user models.ApiUserCreate
@@ -91,5 +91,46 @@ func UserCreateHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.R
 		ac.HandlerResp = http.StatusInternalServerError
 		return ac.HandlerResp, err
 	}
+	return ac.HandlerResp, nil
+}
+
+// Deletes a user from the database, again, both in the API and Auth schemas
+func UserDeleteHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.Request) (int, error) {
+	var err error
+	var UserDel struct {
+		Email    string
+	}
+
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+
+	if err != nil {
+		log.Printf("Found an error in the UserDeleteHandler while parsing the body: %v", err)
+		ac.HandlerResp = http.StatusInternalServerError
+		return ac.HandlerResp, err
+	}
+
+	err = json.Unmarshal(body, &UserDel)
+
+	if err != nil {
+		ac.HandlerResp = 422
+		log.Printf("Encountered some malformed JSON: %v", err)
+		return ac.HandlerResp, err
+	}
+
+	err = models.DeleteUser(ac.Db, UserDel.Email)
+	if err != nil {
+		log.Printf("Encountered an error from the database while deleting a user: %v", err)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	ac.HandlerResp = 204
+	w.WriteHeader(ac.HandlerResp)
+	err = json.NewEncoder(w).Encode(settings.JsonResp{ac.HandlerResp, "New user created."})
+	if err != nil {
+		ac.HandlerResp = http.StatusInternalServerError
+		log.Printf("Server error in sending back a UserDelete response: %v", err)
+		return ac.HandlerResp, err
+	}
+
 	return ac.HandlerResp, nil
 }

@@ -25,6 +25,14 @@ func ApiRouter(ac *settings.AppContext) *mux.Router {
 	}
 	router.Methods("POST").Path("/user/create").Name(UserCreateFunc.RouteName).Handler(&UserCreateFunc)
 
+	UserDeleteFunc := handlers.AppHandler{
+		ac,
+		false,
+		"DeleteUser",
+		handlers.UserDeleteHandler,
+	}
+	router.Methods("DELETE").Path("/user/delete").Name(UserCreateFunc.RouteName).Handler(&UserDeleteFunc)
+
 	UserIndexFunc := handlers.AppHandler{
 		ac,
 		false,

@@ -180,6 +180,65 @@ func TestCreateUser(t *testing.T) {
 
 	// Clean the test rows out of the database. Have to do the auth row first, because the foreign key constraint
 	// will make Postgres complain if we don't.
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
 	context.Db.MustExec(`DELETE FROM tinyplannr_auth.user WHERE user_id = 1`)
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+}
+
+func TestDeleteUser(t *testing.T) {
+	log.Println("Starting TestDeleteUser...")
+	context := Setup()
+	defer context.Db.Close()
+	defer Teardown()
+
+	// POST data setup
+	testUser := models.ApiUserCreate{
+		Email: "test@test.com",
+		Password: "faerts",
+		FirstName: "Chris",
+		LastName: "Yarie",
+		ZipCode: 22201,
+		UpdateDt: time.Now(),
+	}
+
+	createBody, err := json.Marshal(testUser)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// First, let's actually create the user
+	post_str := fmt.Sprintf("%s/user/create", server.URL)
+	req, err := http.NewRequest("POST", post_str, bytes.NewReader(createBody))
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
+	}
+
+	deleteUser := models.ApiUser{
+		Email:    "test@test.com",
+	}
+
+	delBody, err := json.Marshal(deleteUser)
+	if err != nil {
+		t.Error(err)
+	}
+
+	delete_string := fmt.Sprintf("%s/user/delete", server.URL)
+	req, err = http.NewRequest("DELETE", delete_string, bytes.NewReader(delBody))
+	res, err = http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.StatusCode != 204 {
+		t.Errorf("Expected a 204, received a %d", res.StatusCode)
+	}
+
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
 }

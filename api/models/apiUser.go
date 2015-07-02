@@ -67,4 +67,26 @@ func CreateUser(db *sqlx.DB, au ApiUserCreate) error {
 	return err
 }
 
+func DeleteUser(db *sqlx.DB, email string) error {
+	var err error
+
+	// We have to drop the UserAuth entry first to avoid breaking foreign key constraints
+	err = DeleteUserAuth(db, email)
+
+	if err != nil {
+		log.Printf("Encountered an error removing the UserAuth entry: %v", err)
+	}
+
+	tx := db.MustBegin()
+	tx.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = $1`, email)
+	err = tx.Commit()
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return err
+}
+
 

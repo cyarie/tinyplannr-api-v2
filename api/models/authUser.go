@@ -41,3 +41,18 @@ func CreateUserAuth(db *sqlx.DB, au ApiUserCreate) error {
 
 	return err
 }
+
+func DeleteUserAuth(db *sqlx.DB, email string) error {
+	var err error
+
+	tx := db.MustBegin()
+	tx.MustExec(`DELETE FROM tinyplannr_auth.user WHERE email = $1`, email)
+	err = tx.Commit()
+
+	if err != nil {
+		log.Printf("Error removing user from auth table: %v", err)
+		return err
+	}
+
+	return err
+}
