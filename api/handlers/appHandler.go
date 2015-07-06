@@ -26,7 +26,8 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fn.RouteName,
 	)
 
-	// Error-handling block. Take in a
+	// Error-handling block. Take in a status code, check to see if it is an error code; if it is, return our standard
+	// error messages. If not, continue as normal.
 	if err != nil {
 		log.Println(err)
 		switch status {
@@ -55,4 +56,6 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(settings.JsonResp{status, "Request included malformed JSON. Please try again."})
 		}
 	}
+
+	return
 }
