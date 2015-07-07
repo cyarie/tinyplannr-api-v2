@@ -23,7 +23,7 @@ type ApiEvent struct {
 func CreateEvent (db *sqlx.DB, ae ApiEvent) error {
 	var err error
 
-	// Look at this honkin' query -- we use a subquery to grab the user_id for a given email address.
+	// Look at this honkin' query -- we use a sub-query to grab the user_id for a given email address.
 	query_str, err := db.Preparex(`INSERT INTO tinyplannr_api.event
 	                                   (user_id, title, description, location, all_day, start_dt, end_dt, update_dt)
 	                               VALUES ((SELECT user_id FROM tinyplannr_api.user WHERE email = $1),

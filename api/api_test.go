@@ -44,14 +44,44 @@ func Setup() *settings.AppContext {
 	return context
 }
 
+func CreateTestUser() error {
+	// This function will give us a test user to use in tests where we need one.
+	var err error
+
+	testUser := models.ApiUserCreate{
+		Email:     "test@test.com",
+		Password:  "faerts",
+		FirstName: "Chris",
+		LastName:  "Yarie",
+		ZipCode:   22201,
+		UpdateDt:  time.Now(),
+	}
+
+	body, err := json.Marshal(testUser)
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Let's make the URL for the POST request, and the request itself
+	req_str := fmt.Sprintf("%s/user/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
+	http.DefaultClient.Do(req)
+
+	return err
+}
+
 func ClearDB(context *settings.AppContext) {
-	// This will reset the tables and schemas in our DB to be fresh.
+	// This will reset the tables and schemas in our DB to start their id sequences at 1.
 	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
 	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_auth.user_auth_id_seq RESTART;`)
 	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.event_event_id_seq RESTART;`)
+
+	// Must delete in this order to keep Postgres from complaining about foreign keys.
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.event WHERE event_id = 1`)
 	context.Db.MustExec(`DELETE FROM tinyplannr_auth.user WHERE user_id = 1`)
 	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+
+	return
 }
 
 func Teardown() {
@@ -101,21 +131,10 @@ func TestGetUser(t *testing.T) {
 	defer context.Db.Close()
 	defer Teardown()
 
-	// We also have to initialize the database here
-	testUser := models.ApiUser{
-		Email:     "test@test.com",
-		FirstName: "Chris",
-		LastName:  "Yarie",
-		ZipCode:   22201,
-		UpdateDt:  time.Now(),
+	err := CreateTestUser()
+	if err != nil {
+		fmt.Println(err)
 	}
-
-	// We have to run this to reset the SERIAL sequence back to one to avoid re-building the schema each time we test
-	context.Tx = context.Db.MustBegin()
-	context.Tx.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
-	context.Tx.MustExec(`INSERT INTO tinyplannr_api.user (email, first_name, last_name, zip_code, update_dt)
-	             VALUES ($1, $2, $3, $4, $5);`, testUser.Email, testUser.FirstName, testUser.LastName, testUser.ZipCode, testUser.UpdateDt)
-	context.Tx.Commit()
 
 	// Retrieve good ol' user number one
 	req_str := fmt.Sprintf("%s/user/1", server.URL)
@@ -195,32 +214,9 @@ func TestDeleteUser(t *testing.T) {
 	defer context.Db.Close()
 	defer Teardown()
 
-	// POST data setup
-	testUser := models.ApiUserCreate{
-		Email:     "test@test.com",
-		Password:  "faerts",
-		FirstName: "Chris",
-		LastName:  "Yarie",
-		ZipCode:   22201,
-		UpdateDt:  time.Now(),
-	}
-
-	createBody, err := json.Marshal(testUser)
+	err := CreateTestUser()
 	if err != nil {
-		t.Error(err)
-	}
-
-	// First, let's actually create the user
-	post_str := fmt.Sprintf("%s/user/create", server.URL)
-	req, err := http.NewRequest("POST", post_str, bytes.NewReader(createBody))
-	res, err := http.DefaultClient.Do(req)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if res.StatusCode != http.StatusCreated {
-		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
+		fmt.Println(err)
 	}
 
 	deleteUser := models.ApiUser{
@@ -233,8 +229,8 @@ func TestDeleteUser(t *testing.T) {
 	}
 
 	delete_string := fmt.Sprintf("%s/user/delete", server.URL)
-	req, err = http.NewRequest("DELETE", delete_string, bytes.NewReader(delBody))
-	res, err = http.DefaultClient.Do(req)
+	req, err := http.NewRequest("DELETE", delete_string, bytes.NewReader(delBody))
+	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		t.Error(err)
@@ -254,25 +250,10 @@ func TestCreateEvent(t *testing.T) {
 	defer context.Db.Close()
 	defer Teardown()
 
-	// First make a test user -- will eventually refactor to cut down on all this boilerplate
-	testUser := models.ApiUserCreate{
-		Email:     "test@test.com",
-		Password:  "faerts",
-		FirstName: "Chris",
-		LastName:  "Yarie",
-		ZipCode:   22201,
-		UpdateDt:  time.Now(),
-	}
-
-	body, err := json.Marshal(testUser)
+	err := CreateTestUser()
 	if err != nil {
-		t.Error(err)
+		fmt.Println(err)
 	}
-
-	// Let's make the URL for the POST request, and the request itself
-	req_str := fmt.Sprintf("%s/user/create", server.URL)
-	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
-	http.DefaultClient.Do(req)
 
 	// Let's create a test event
 	testEvent := models.ApiEvent{
@@ -286,13 +267,13 @@ func TestCreateEvent(t *testing.T) {
 		UpdateDt: time.Now(),
 	}
 
-	body, err = json.Marshal(testEvent)
+	body, err := json.Marshal(testEvent)
 	if err != nil {
 		t.Error(err)
 	}
 
-	req_str = fmt.Sprintf("%s/event/create", server.URL)
-	req, err = http.NewRequest("POST", req_str, bytes.NewReader(body))
+	req_str := fmt.Sprintf("%s/event/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
