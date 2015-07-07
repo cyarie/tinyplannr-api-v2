@@ -70,6 +70,32 @@ func CreateTestUser() error {
 	return err
 }
 
+func CreateTestEvent() error {
+	var err error
+
+	testEvent := models.ApiEvent{
+		Email: "test@test.com",
+		Title: "Bert's Big Event",
+		Description: "Gonna be a lot of fun",
+		Location: "Faerts Home",
+		AllDay: false,
+		StartDt: time.Now(),
+		EndDt: time.Now(),
+		UpdateDt: time.Now(),
+	}
+
+	body, err := json.Marshal(testEvent)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	req_str := fmt.Sprintf("%s/event/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
+	http.DefaultClient.Do(req)
+
+	return err
+}
+
 func ClearDB(context *settings.AppContext) {
 	// This will reset the tables and schemas in our DB to start their id sequences at 1.
 	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
@@ -286,3 +312,5 @@ func TestCreateEvent(t *testing.T) {
 
 	ClearDB(context)
 }
+
+func TestDeleteEvent
