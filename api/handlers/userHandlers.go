@@ -15,6 +15,7 @@ import (
 	"github.com/cyarie/tinyplannr-api-v2/api/settings"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
+	"fmt"
 )
 
 // Grabs the stored data for a given user
@@ -122,9 +123,10 @@ func UserDeleteHandler(ac *settings.AppContext, w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	ac.HandlerResp = 204
+	ac.HandlerResp = 200
+	resp_str := fmt.Sprintf("User %s deleted.", UserDel.Email)
 	w.WriteHeader(ac.HandlerResp)
-	err = json.NewEncoder(w).Encode(settings.JsonResp{ac.HandlerResp, "New user created."})
+	err = json.NewEncoder(w).Encode(settings.JsonResp{ac.HandlerResp, resp_str})
 	if err != nil {
 		ac.HandlerResp = http.StatusInternalServerError
 		log.Printf("Server error in sending back a UserDelete response: %v", err)

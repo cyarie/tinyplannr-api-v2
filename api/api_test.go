@@ -44,6 +44,16 @@ func Setup() *settings.AppContext {
 	return context
 }
 
+func ClearDB(context *settings.AppContext) {
+	// This will reset the tables and schemas in our DB to be fresh.
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_auth.user_auth_id_seq RESTART;`)
+	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.event_event_id_seq RESTART;`)
+	context.Db.MustExec(`DELETE FROM tinyplannr_api.event WHERE event_id = 1`)
+	context.Db.MustExec(`DELETE FROM tinyplannr_auth.user WHERE user_id = 1`)
+	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+}
+
 func Teardown() {
 	fmt.Println("Test server closing...")
 	server.Close()
@@ -87,6 +97,7 @@ func TestIndexHandler(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	log.Println("Starting TestGetUser...")
 	context := Setup()
+
 	defer context.Db.Close()
 	defer Teardown()
 
@@ -136,16 +147,13 @@ func TestGetUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Println(testResp)
-
-	// Let's clear out this test row
-	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
-	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+	ClearDB(context)
 }
 
 func TestCreateUser(t *testing.T) {
 	log.Println("Starting TestCreateUser...")
 	context := Setup()
+
 	defer context.Db.Close()
 	defer Teardown()
 
@@ -177,16 +185,13 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
 	}
 
-	// Clean the test rows out of the database. Have to do the auth row first, because the foreign key constraint
-	// will make Postgres complain if we don't.
-	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
-	context.Db.MustExec(`DELETE FROM tinyplannr_auth.user WHERE user_id = 1`)
-	context.Db.MustExec(`DELETE FROM tinyplannr_api.user WHERE email = 'test@test.com'`)
+	ClearDB(context)
 }
 
 func TestDeleteUser(t *testing.T) {
 	log.Println("Starting TestDeleteUser...")
 	context := Setup()
+
 	defer context.Db.Close()
 	defer Teardown()
 
@@ -235,9 +240,68 @@ func TestDeleteUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	if res.StatusCode != 204 {
-		t.Errorf("Expected a 204, received a %d", res.StatusCode)
+	if res.StatusCode != 200 {
+		t.Errorf("Expected a 200, received a %d", res.StatusCode)
 	}
 
-	context.Db.MustExec(`ALTER SEQUENCE tinyplannr_api.user_user_id_seq RESTART;`)
+	ClearDB(context)
+}
+
+func TestCreateEvent(t *testing.T) {
+	log.Println("Starting TestCreateEvent...")
+	context := Setup()
+
+	defer context.Db.Close()
+	defer Teardown()
+
+	// First make a test user -- will eventually refactor to cut down on all this boilerplate
+	testUser := models.ApiUserCreate{
+		Email:     "test@test.com",
+		Password:  "faerts",
+		FirstName: "Chris",
+		LastName:  "Yarie",
+		ZipCode:   22201,
+		UpdateDt:  time.Now(),
+	}
+
+	body, err := json.Marshal(testUser)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Let's make the URL for the POST request, and the request itself
+	req_str := fmt.Sprintf("%s/user/create", server.URL)
+	req, err := http.NewRequest("POST", req_str, bytes.NewReader(body))
+	http.DefaultClient.Do(req)
+
+	// Let's create a test event
+	testEvent := models.ApiEvent{
+		Email: "test@test.com",
+		Title: "Bert's Big Event",
+		Description: "Gonna be a lot of fun",
+		Location: "Faerts Home",
+		AllDay: false,
+		StartDt: time.Now(),
+		EndDt: time.Now(),
+		UpdateDt: time.Now(),
+	}
+
+	body, err = json.Marshal(testEvent)
+	if err != nil {
+		t.Error(err)
+	}
+
+	req_str = fmt.Sprintf("%s/event/create", server.URL)
+	req, err = http.NewRequest("POST", req_str, bytes.NewReader(body))
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if res.StatusCode != http.StatusCreated {
+		t.Errorf("Expected a 201, recieved a %d", res.StatusCode)
+	}
+
+	ClearDB(context)
 }
